@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title> region capture demo </title>
+  <style>
+
+    body {
+        height: 1024px;
+    }
+
+    .rowContentA {
+        height: 100%;
+        width: 50%;
+        background-color: #9bc6d3;
+        border: 10px solid #9bc6d3;  
+    }
+
+    .rowContentB {
+        height: 100%;
+        width: 50%;
+        background-color: #e8e3cc;
+        border: 10px solid #e8e3cc;  
+    }
+
+    .rowContentHolder {
+        display: flex;
+        height: 40%;
+        width: 100%;
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+    <br /><br />
+    <div class="rowContentHolder">
+    <div id="div1" class="rowContentA">
+        <h1>Content 1</h1>
+        <p id="animation1"></p>
+    </div>
+    <div id="div2" class="rowContentB">
+        <h1>Content 2</h1>
+        <p id="animation2"></p>
+    </div>
+    </div>
+
+    <br /> <br />
+
+
+	<div id="conference">
+        <button onclick="captureContent1();">Capture Content 1</button>
+        <button onclick="captureContent2();">Capture Content 2</button>
+    </div>
+
+
+    <div style="width: 480px; height: 480px; border: 1px solid black;">
+        <video id="local_video" width="480" height="480"  playsinline autoplay>
+        </video>
+    </div>
+
+      <script>
+        if (typeof CropTarget === 'undefined') {
+          // TODO: Display explanation and abort.
+          alert('does not support region crop');
+        }
+
+        let track = null;
+        let stream = null;
+        const video = document.getElementById("local_video");
+
+        let animationCounter = 0;
+  
+        function animate(animation) {
+          animation.innerHTML = `Poor man's Intellectual-Property-respecting animation frame #${animationCounter}.`;
+        }
+  
+        setInterval(() => {
+          ++animationCounter;
+          animate(animation1);
+          animate(animation2);
+        }, 100);
+
+        async function captureContent1() {
+
+            if(!track) {
+                stream = await navigator.mediaDevices.getDisplayMedia({
+                    preferCurrentTab: true
+                });
+                [track] = stream.getVideoTracks();
+                if (!track.label.startsWith("current-web-contents-media-stream://")) {
+                    alert("region caputre only works when you capture current tab ");
+                    return false;
+                }
+            }
+
+            video.pause();
+            let div1CropTarget = await CropTarget.fromElement(document.getElementById("div1"));
+            await track.cropTo(div1CropTarget);
+
+            if(video.srcObject) {  
+                video.play();
+            } else {
+                video.srcObject = stream;
+                video.play();
+            }
+        }
+
+
+        async function captureContent2() {
+            if(!track) {
+                stream = await navigator.mediaDevices.getDisplayMedia({
+                    preferCurrentTab: true
+                });
+                [track] = stream.getVideoTracks();
+                if (!track.label.startsWith("current-web-contents-media-stream://")) {
+                    alert("region caputre only works when you capture current tab ");
+                    return false;
+                }
+            }
+            
+            let div2CropTarget = await CropTarget.fromElement(document.getElementById("div2"));
+            await track.cropTo(div2CropTarget);
+            
+            if(video.srcObject) {
+                video.play();
+            } else {
+                video.srcObject = stream;
+                video.play();
+            }
+        }
+
+      </script>
+</body>
+
+</html>
